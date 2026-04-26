@@ -18,6 +18,7 @@ services:
     env_file: .env
     secrets:
       - wp_admin_password
+      - db_password
     networks:
       - inception
     volumes:

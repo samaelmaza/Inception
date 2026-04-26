@@ -25,6 +25,7 @@ if [ ! -f wp-config.php ]; then
 	wp user create --allow-root "second_user" "second_user@gmail.com" \
 		--role=author \
 		--user_pass="user123456"
+	wp theme install astra --activate --allow-root
 else
 	echo "Wordpress already installed"
 fi
