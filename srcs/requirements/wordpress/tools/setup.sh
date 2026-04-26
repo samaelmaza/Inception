@@ -25,7 +25,17 @@ if [ ! -f wp-config.php ]; then
 	wp user create --allow-root "second_user" "second_user@gmail.com" \
 		--role=author \
 		--user_pass="user123456"
+
 	wp theme install astra --activate --allow-root
+
+	wp config set WP_REDIS_HOST redis --allow-root
+	wp config set WP_REDIS_PORT 6379 --raw --allow-root
+	wp config set WP_CACHE true --raw --allow-root
+	wp plugin install redis-cache --activate --allow-root
+	wp redis enable --allow-root
+
+	chown -R www-data:www-data /var/www/html
+
 else
 	echo "Wordpress already installed"
 fi

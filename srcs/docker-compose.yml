@@ -37,6 +37,13 @@ services:
     ports:
       - "443:443"
 
+  redis:
+    container_name: redis
+    build: ./requirements/redis
+    networks:
+      - inception
+    restart: always
+
 networks:
   inception:
     driver: bridge

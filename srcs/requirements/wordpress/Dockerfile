@@ -3,6 +3,7 @@ FROM debian:bullseye
 RUN apt-get update && apt-get install -y \
 	php7.4-fpm \
 	php-mysql \
+	php-redis \
 	mariadb-client \
 	wget
 RUN mkdir -p /run/php

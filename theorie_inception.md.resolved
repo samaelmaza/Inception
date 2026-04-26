@@ -261,3 +261,29 @@ Voici son autopsie :
 3. `up` : Lis le fichier, trouve tous les services (mariadb, wordpress, nginx) et allume-les tous ensemble.
 4. `-d` : Fais ça en tâche de fond pour me laisser mon terminal.
 5. `--build` : Le fameux drapeau magique ! Il force Docker à vérifier s'il y a eu des modifications dans tes fichiers avant d'allumer. S'il voit un changement, il re-construit l'image automatiquement. Ça t'évite de tomber dans le "piège de l'ancienne image" qu'on a vu à la Section 16 !
+
+## 29. Bonus : La magie du Cache avec Redis
+Dans une architecture web classique, quand un visiteur charge la page d'accueil de ton WordPress, le serveur PHP interroge la base de données MariaDB. MariaDB va alors chercher l'information sur le disque dur, fait ses calculs, et renvoie le résultat à PHP. C'est un processus qui est (informatiquement parlant) très lent. Si 1000 personnes visitent la page en même temps, MariaDB va faire 1000 fois exactement le même calcul, et ton serveur va s'effondrer.
+
+C'est là que **Redis** intervient en sauveur. 
+Redis est une base de données de type "clé-valeur" qui stocke ses données **exclusivement en RAM** (mémoire vive). La RAM est des centaines de fois plus rapide qu'un disque dur (SSD ou HDD).
+Avec Redis, quand le premier visiteur arrive, PHP demande à MariaDB, puis sauvegarde le résultat final dans Redis. Pour les 999 visiteurs suivants, PHP ne va même plus déranger MariaDB : il va chercher le résultat directement dans la RAM de Redis. La page se charge quasi-instantanément !
+
+### Le paramètre `--raw` dans WP-CLI
+Dans le script de configuration, tu as peut-être remarqué ce paramètre : `wp config set WP_CACHE true --raw`.
+Le fichier `wp-config.php` est écrit en langage PHP. En PHP, il y a une différence fondamentale entre :
+- `define('WP_CACHE', 'true');` *(Une chaîne de texte, avec des guillemets)*
+- `define('WP_CACHE', true);` *(Une valeur booléenne brute, sans guillemets)*
+
+Par défaut, la commande `wp config set` entoure toujours les valeurs avec des guillemets. Le paramètre `--raw` (qui signifie "Brut" en anglais) demande à WP-CLI de ne pas mettre de guillemets. C'est indispensable pour les vrais/faux (`true`/`false`) ou les nombres entiers (comme le port `6379`).
+
+## 30. Le problème de permissions `www-data` vs `root`
+Quand on automatise WordPress avec WP-CLI, on utilise le flag `--allow-root` pour forcer le programme à s'exécuter avec les droits de super-administrateur Linux (`root`).
+Conséquence : Tous les fichiers téléchargés (le cœur de WordPress, les thèmes, les plugins) vont appartenir à `root`.
+
+Or, quand un visiteur navigue sur le site, c'est le programme PHP-FPM qui gère la requête. Et dans notre fichier `www.conf`, on a explicitement demandé à PHP de travailler avec l'utilisateur `www-data` (un utilisateur avec très peu de privilèges, pour des raisons de sécurité).
+Si l'utilisateur `www-data` essaie d'écrire dans un fichier appartenant à `root` (par exemple pour uploader une image, ou pour que Redis crée son fichier de cache local), Linux lui refuse l'accès et affiche "Filesystem: Not writeable".
+
+La solution classique en DevOps est donc de faire un grand transfert de propriété à la fin du script d'installation :
+`chown -R www-data:www-data /var/www/html`
+Cette ligne dit : "Donne la propriété (`CHange OWNer`) de manière Récursive (`-R`) à l'utilisateur et groupe `www-data` pour tout le dossier web". Ainsi, PHP retrouve ses droits légitimes sur le site !
