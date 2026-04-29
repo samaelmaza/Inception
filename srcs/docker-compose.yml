@@ -65,6 +65,24 @@ services:
     ports:
       - "8080:8080"
 
+  static_site:
+    container_name: static_site
+    build: ./requirements/static_site
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "3000:3000"
+
+  dashboard:
+    container_name: dashboard
+    build: ./requirements/dashboard
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "8081:8081"
+
 networks:
   inception:
     driver: bridge
