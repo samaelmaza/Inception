@@ -44,6 +44,27 @@ services:
       - inception
     restart: always
 
+  ftp:
+    container_name: ftp
+    build: ./requirements/ftp
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - wordpress:/var/www/html
+
+  adminer:
+    container_name: adminer
+    build: ./requirements/adminer
+    networks:
+      - inception
+    restart: always
+    ports:
+      - "8080:8080"
+
 networks:
   inception:
     driver: bridge

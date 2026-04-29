@@ -287,3 +287,14 @@ Si l'utilisateur `www-data` essaie d'écrire dans un fichier appartenant à `roo
 La solution classique en DevOps est donc de faire un grand transfert de propriété à la fin du script d'installation :
 `chown -R www-data:www-data /var/www/html`
 Cette ligne dit : "Donne la propriété (`CHange OWNer`) de manière Récursive (`-R`) à l'utilisateur et groupe `www-data` pour tout le dossier web". Ainsi, PHP retrouve ses droits légitimes sur le site !
+
+## 31. Tester visuellement Redis
+Pour s'assurer que le cache Redis intercepte bien les requêtes, on a deux méthodes :
+1. **Le test Web** : Se connecter à `/wp-admin`, aller dans "Settings > Redis". Le statut "Connected" doit s'afficher, et les statistiques "Cache Hits" (Succès) vont augmenter à chaque fois qu'on clique sur le site.
+2. **Le test Terminal (Monitoring)** : Dans le terminal, taper `docker compose exec redis redis-cli monitor`. Dès qu'on navigue sur le site WordPress, on voit les requêtes défiler en direct dans le terminal. C'est la preuve que Redis répond à la place de MariaDB.
+
+## 32. Gérer son espace disque (Les commandes utiles)
+Un bon DevOps doit surveiller la consommation de son infrastructure.
+- `docker system df` : Affiche la vue globale (taille des images, des conteneurs, et du cache de build).
+- `docker images` : Affiche le poids individuel de chaque image. (Il est normal qu'une image basée sur Debian pèse entre 150MB et 500MB selon ce qu'on installe).
+- `sudo du -sh /home/sam/data/*` : Affiche le poids réel occupé par les dossiers de données (volumes) sur la machine physique.
