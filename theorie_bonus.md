@@ -8,7 +8,7 @@ Ce document rassemble toute l'expertise acquise sur les services Bonus du projet
 
 ### 🧠 Comment ça fonctionne ?
 Dans une architecture WordPress classique, chaque visiteur déclenche une requête de PHP vers la base de données MariaDB. MariaDB doit lire son disque dur, faire ses calculs et renvoyer la réponse. C'est très lent.
-**Redis** est une base de données "clé-valeur" qui vit **entièrement dans la RAM** (mémoire vive). 
+**Redis** est une base de données "clé-valeur" qui vit **entièrement dans la RAM** (mémoire vive).
 Grâce à Redis, le résultat de la première requête est sauvegardé en RAM. Pour tous les visiteurs suivants, PHP ne dérange plus MariaDB : il lit directement dans la RAM de Redis. La page se charge quasi-instantanément.
 
 ### ❓ Les questions pièges
@@ -21,7 +21,7 @@ Grâce à Redis, le résultat de la première requête est sauvegardé en RAM. P
 1. **Test Visuel Web** : Aller sur `https://sreffers.42.fr/wp-admin` > Réglages > Redis. Le statut doit être "Connected" et les statistiques (Hits/Misses) augmentent en naviguant sur le site.
 2. **Le Flex DevOps (Terminal)** :
    ```bash
-   docker compose exec redis redis-cli monitor
+   docker compose exec redis redis-cli monitorTA.1TA.1TA.1TA.1VTA.1
    ```
    *Prouve que Redis intercepte les requêtes : un torrent de texte défile quand on rafraîchit la page WordPress.*
 
@@ -30,7 +30,7 @@ Grâce à Redis, le résultat de la première requête est sauvegardé en RAM. P
 ## 📂 Bonus 2 : Serveur FTP (vsftpd)
 
 ### 🧠 Comment ça fonctionne ?
-FTP (File Transfer Protocol) permet de transférer des fichiers à distance. Dans notre infrastructure, on connecte le conteneur FTP au même volume (`srcs_wordpress`) que notre serveur Web. 
+FTP (File Transfer Protocol) permet de transférer des fichiers à distance. Dans notre infrastructure, on connecte le conteneur FTP au même volume (`srcs_wordpress`) que notre serveur Web.
 Ainsi, on crée une "porte dérobée" pour modifier le code source du site web (HTML, PHP, CSS) sans avoir à se connecter au serveur web directement. C'est très utile en cas de crash de WordPress.
 
 ### ❓ Les questions pièges

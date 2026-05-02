@@ -36,7 +36,7 @@ Pendant la correction, l'évaluateur va scruter ton code et lancer des commandes
 
 ### Les Commandes qu'il va taper
 1. `docker network ls` : Il veut voir ton réseau `srcs_inception` apparaître.
-2. `docker volume ls` puis `docker volume inspect srcs_mariadb` : Il va vérifier que le champ `Device` pointe bien vers `/home/sam/data/mariadb` sur ta vraie machine.
+2. `docker volume ls` puis `docker volume inspect srcs_mariadb` : Il va vérifier que le champ `Device` pointe bien vers `/home/sam/data/mariadb` (ou le chemin de ta VM) sur ta vraie machine.
 3. `docker compose ps` : Pour vérifier que les 3 conteneurs sont `Up`.
 
 ### Les Tests Pratiques
@@ -45,9 +45,13 @@ Pendant la correction, l'évaluateur va scruter ton code et lancer des commandes
    - Aller sur `https://sreffers.42.fr` (Port 443) : Le site doit s'afficher.
    - Montrer le certificat SSL (Avertissement de sécurité accepté).
 2. **WordPress** :
-   - Ton site s'affiche (pas de page d'installation).
+   - Ton site s'affiche à l'adresse `https://sreffers.42.fr` (pas de page d'installation).
    - Ton pseudo Admin **NE CONTIENT PAS** le mot `admin` (ex: `sreffers` est parfait).
-   - Se connecter en Admin (`/wp-admin`), faire une modification sur une page ou ajouter un commentaire, et vérifier sur le site.
+   - **Se connecter en Admin pour commenter** :
+     - Va sur 👉 `https://sreffers.42.fr/wp-admin`
+     - Connecte-toi avec ton pseudo admin et le mot de passe du fichier `secrets/wp_admin_password.txt`.
+     - Dans le menu de gauche, clique sur "Articles" -> Clique sur "Hello World" -> Modifie le texte ou ajoute un commentaire.
+     - Retourne sur la page d'accueil pour montrer au correcteur que la modification est bien en ligne.
 3. **MariaDB** :
    - Se connecter en tapant : `docker compose exec mariadb mysql -u root -p` ou avec ton `wp_user`.
    - Taper `SHOW DATABASES;` puis `USE wordpress;` puis `SHOW TABLES;` pour prouver que la base n'est pas vide.
@@ -65,3 +69,44 @@ Le sujet stipule simplement : "Verify and test the proper functioning and implem
 
 Tu peux très bien créer un nouveau dossier `srcs/requirements/redis/` et rajouter le bloc `redis:` dans ton `docker-compose.yml` actuel.
 *(Note : Certains étudiants aiment faire un fichier `docker-compose-bonus.yml` et une règle `make bonus` pour séparer les choses, mais ce n'est pas obligatoire. Le plus simple et rapide est de l'intégrer directement à l'infrastructure existante, c'est ce qui se fait de plus en plus souvent sur ce projet).*
+
+---
+
+## 4. Accéder aux Services Bonus
+
+Pour tester rapidement tes 5 bonus le jour de la soutenance :
+- **Portfolio Statique** (HTML/Python) : 👉 `http://sreffers.42.fr:3000`
+- **Adminer** (Base de données) : 👉 `http://sreffers.42.fr:8080` (Connecte-toi avec `wp_user` et le mot de passe de `db_password.txt`).
+- **Dashboard Monitoring** (RAM/CPU) : 👉 `http://sreffers.42.fr:8081`
+- **Serveur FTP** : Depuis le terminal, tape `ftp 127.0.0.1`. Connecte-toi avec l'utilisateur FTP et ton `ftp_password.txt`.
+- **Redis Cache** : Depuis le terminal de la VM, tape `docker compose -f srcs/docker-compose.yml exec redis redis-cli monitor` puis recharge ton site WordPress pour voir les requêtes être mises en cache en temps réel.
+
+---
+
+## 5. Checklist : Installation sur la VM d'Évaluation (Le Jour J)
+
+Quand tu vas arriver en soutenance sur une machine de l'école (ou une VM vierge fournie), voici **exactement** l'ordre des choses à faire avant d'appeler ton correcteur :
+
+1. **Cloner le repo** : 
+   `git clone <ton_repo_git> Inception` puis `cd Inception`
+2. **Modifier les chemins absolus (CRITIQUE !)** :
+   - Dans ton `Makefile`, tu as sûrement écrit `DATA_PATH = /home/sam/data`. Sur la machine de l'école, ton utilisateur sera `sreffers`. Tu dois donc ouvrir le Makefile et modifier cette ligne en `/home/sreffers/data`. Fais de même dans ton `.env` si tu y avais écrit un chemin absolu.
+3. **Restaurer les Secrets (CRITIQUE !)** : 
+   - Puisque le dossier `secrets/` n'a pas été poussé sur Git (pour des raisons de sécurité évidentes), tes conteneurs vont planter si tu lances `make` maintenant. Tu dois impérativement les recréer :
+     ```bash
+     mkdir secrets
+     echo "ton_mot_de_passe" > secrets/db_password.txt
+     echo "ton_mot_de_passe_root" > secrets/db_root_password.txt
+     echo "ton_mot_de_passe_wp" > secrets/wp_admin_password.txt
+     echo "ton_mot_de_passe_ftp" > secrets/ftp_password.txt
+     ```
+4. **Restaurer le fichier `.env`** : 
+   - Pareil, s'il a été ignoré par Git, recrée-le avec `nano srcs/.env` et remets dedans tes variables (`DOMAIN_NAME=sreffers.42.fr`, `MYSQL_DATABASE=wordpress`, etc.).
+5. **Configurer le DNS local** : 
+   - NGINX ne fonctionnera pas si le nom de domaine ne pointe pas vers la machine locale. Ouvre le fichier hosts :
+     ```bash
+     sudo nano /etc/hosts
+     ```
+   - Ajoute la ligne : `127.0.0.1 sreffers.42.fr`
+6. **Lancer la magie** : 
+   - Maintenant que l'environnement est restauré, tu peux taper `make`. Toute ton infrastructure va se construire sans la moindre erreur ! Tu es prêt à appeler le correcteur.
